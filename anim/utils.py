@@ -1,0 +1,197 @@
+import numpy as np
+import pandas as pd
+import math
+from datetime import datetime, timedelta
+
+
+def clean_hull(lst: np.ndarray, tol: int = 5) -> np.ndarray:
+    """
+    Excludes outliers of the hull by checking if the points are within a certain distance from the average
+    distance of the points to its nearest neighbor.
+
+    Parameters
+    ----------
+    lst : np.ndarray
+        A numpy array of shape (n, 2) where n is the number of points and 2 represents lon and lat coordinates.
+    tol : int, optional
+        Tolerance factor to determine if a point is an outlier based on (tol) times its distance to the nearest
+        neighbors. The default is 5.
+    """
+
+    if lst.shape != (len(lst), 2):
+        raise ValueError(
+            "Input must be a numpy array of shape (n, 2) where n is the number of points."
+        )
+
+    ##First calculcate each distance to the nearest neighbor by looping through the elements of the numpy array
+    lst_neighbor_right = np.roll(lst, -1)
+    lst_neighbor_left = np.roll(lst, 1)
+    #TODO Why np.linalg.norm ? This should be sum, no ?
+    lst_distance_right = np.linalg.norm(lst - lst_neighbor_right, axis=1)
+    lst_distance_left = np.linalg.norm(lst - lst_neighbor_left, axis=1)
+
+    mean_distance = np.mean((lst_distance_right + lst_distance_left) * 0.5)
+
+    for i in range(len(lst_distance_right)):
+        if (
+            lst_distance_right[i] > mean_distance * tol
+            and lst_distance_left[i] > mean_distance * tol
+        ):
+            # If the distance to the two nearest neighbors is greater than the mean distance times the tolerance,
+            np.delete(lst, i, axis=0)
+            # we consider this point an outlier and remove it.
+
+    # return the clean list
+    return lst
+
+
+def data_pd(absolutepath, plotpoints):
+    """
+    Reads data from a CSV file and reshapes it into a 3D numpy array.
+
+    Parameters
+    ----------
+    absolutepath : str
+        The absolute path to the CSV file containing the data.
+    plotpoints : int
+        The number of points to plot in each time step.
+    """
+    data = pd.read_csv(absolutepath, header=None)
+    datanp = data.to_numpy()
+    datanp = datanp.astype(float)
+    datanp = np.expand_dims(datanp, axis=0)
+    datanp = datanp.reshape(int((datanp.shape[1]) / plotpoints), plotpoints, 3)
+    return datanp
+
+
+def clean(input):
+    """
+    Deletes rows from a 2D numpy array where the first or second element is NaN.
+    
+    Parameters
+    ----------
+    test : np.ndarray
+        A 2D numpy array where each row represents a point with at least two elements.
+    """
+
+    del_idx = np.empty((0), dtype=int)
+    for k, row in enumerate(input):
+        if math.isnan(row[0]) or math.isnan(row[1]):
+            del_idx = np.append(del_idx, int(k))
+    output = np.delete(input, del_idx, axis=0)
+    return output
+
+
+def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: bool = False) -> None:
+    """
+    Function to read a .dat file and split each input file such that each 
+    eclipse hast its own file .
+
+    Parameters
+    ----------
+    path : str
+        The path to the .dat file to be read.
+    delimiter : str, optional
+        The delimiter used to split the lines in the file. Default is tab (",").
+    delta : int, optional
+        The minimum time difference in seconds to consider it a new eclipse. Default is 24 hours (24*3600 seconds).
+    clean : bool, optional
+        If True, cleans the data by removing rows with NaN values. Default is False.
+    """
+
+    #Here we just get the initdate from the config file we need that later in the function
+    config = {}
+    with open("../main.conf", "r") as file:
+        for line in file:
+            line = line.strip()
+            if not line or line.startswith("#"):  #Ignore empty lines and comments
+                continue
+            key, value = line.split("=", 1)
+            config[key.strip()] = float(value.strip())
+    init_year = int(config["init_year"])
+    init_month = int(config["init_month"])
+    init_day = int(config["init_day"])
+    init_hour = int(config["init_hour"])
+    init_minute = int(config["init_min"])
+    init_second = int(config["init_second"])
+    init_date = datetime(
+    init_year, init_month, init_day, init_hour, init_minute, init_second
+    )
+
+
+
+    #Now we open the actual file that we want to split
+    if not path.endswith(".dat"):
+        raise ValueError("The file must be a .dat file")
+    f = open(path, "r")
+    if f == None:
+        raise ValueError("The file does not exist or cannot be opened")
+    
+    #List with each line in the file
+    lines = f.readlines()
+    linelistbefore = lines[0].strip().split(delimiter)
+
+    eclipse_count = 0
+    splitidxbefore = 0
+
+    for idx,line in enumerate(lines):
+        #We skip the first line, as it is used for comparison
+        if idx == 0:
+            continue
+        #Here from every line we remove the newline character and split the line into a list of strings
+        linelist = line.strip().split(delimiter)
+        
+        if abs(int(linelist[-1]) - int(linelistbefore[-1])) >= delta:
+            #Here is what happens when we found a jump in time, meaning a new eclipse begins
+            #We write the lines up until this index into new file
+            splitidx = idx
+            #Lets first get the date from the found splitidx:
+            date = init_date + timedelta(seconds=int(linelistbefore[-1]))
+            datestr = date.strftime("%d%m%Y")
+
+
+            with open("../data/split/" + datestr + "lonlat.dat", "w") as fsplit:
+                linestowrite = lines[splitidxbefore:splitidx]
+                #If option clean is set to True, we clean the data along the way
+                #Since we are iterating through the lines anyway
+                if clean:
+                    deleteidx = []
+                    for kidx,k in enumerate(linestowrite):
+                        if "nan" in k or "NaN" in k or "NAN" in k:
+                            deleteidx.append(kidx)
+                    #now we remove the lines with NaN values:
+                    linestowrite = [itemlist for iidx, itemlist in enumerate(linestowrite) if iidx not in deleteidx]
+
+                fsplit.writelines(linestowrite)
+            splitidxbefore = idx
+            eclipse_count += 1 
+
+        #When done we set the linelistbefore which is used as comparison for the next iteration
+        linelistbefore = linelist
+
+    #After that is down one last eclipse remains.
+    #The contents after that last split are not yet written to a file, so we
+    #use splitidx to write the last file and if clean is set to True we again remove
+    #NaN values from the data:
+
+    linestowrite = lines[splitidx:]
+
+    if clean:
+        deleteidx = []
+        for kidx,k in enumerate(linestowrite):
+            if "nan" in k or "NaN" in k or "NAN" in k:
+                deleteidx.append(kidx)
+                #now we remove the lines with NaN values:
+        linestowrite = [itemlist for iidx, itemlist in enumerate(linestowrite) if iidx not in deleteidx]
+        
+    #splitidx is exactly the last index of the eclipse before the last one, so
+    #we have to add one to it to get the date for the last eclipse -> lines[splitidx+1]....
+    date = init_date + timedelta(seconds=int(lines[splitidx+1].strip().split(delimiter)[-1]))
+    datestr = date.strftime("%d%m%Y")
+
+    with open("../data/split/" + datestr + "lonlat.dat", "w") as fsplit:
+        fsplit.writelines(linestowrite)
+
+
+
+        

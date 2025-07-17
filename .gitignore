@@ -1,0 +1,20 @@
+#Ignore Eigen library
+eigen-3.4.0/
+
+#Ignore VS Code
+.vscode/
+
+#Ignore virtual environment
+anim/.venv/
+
+#Ignore sandbox
+sandbox/
+
+
+
+#Ignore media and data files
+*.dat
+*.jpg
+*.png
+*.mp4
+*.exe
