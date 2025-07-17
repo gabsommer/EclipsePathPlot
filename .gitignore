@@ -11,10 +11,15 @@ anim/.venv/
 sandbox/
 
 
-
 #Ignore media and data files
 *.dat
 *.jpg
 *.png
 *.mp4
 *.exe
+
+#Pycache
+*.pyc
+
+#Old animation folder
+anim/old/

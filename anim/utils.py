@@ -18,7 +18,7 @@ def clean_hull(lst: np.ndarray, tol: int = 5) -> np.ndarray:
         neighbors. The default is 5.
     """
 
-    if lst.shape != (len(lst), 2):
+    if lst.shape != (lst.shape[0], 2):
         raise ValueError(
             "Input must be a numpy array of shape (n, 2) where n is the number of points."
         )
@@ -82,7 +82,7 @@ def clean(input):
     return output
 
 
-def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: bool = False) -> None:
+def lon_lat_split(path: str, type: str, delimiter: str = ",", delta: int = 24*3600, clean: bool = False) -> None:
     """
     Function to read a .dat file and split each input file such that each 
     eclipse hast its own file .
@@ -91,6 +91,9 @@ def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: 
     ----------
     path : str
         The path to the .dat file to be read.
+    type : str
+        The type of eclipse data to be processed, either "umbra" or "penumbra".
+        Raises ValueError if the type is not one of these.
     delimiter : str, optional
         The delimiter used to split the lines in the file. Default is tab (",").
     delta : int, optional
@@ -99,6 +102,8 @@ def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: 
         If True, cleans the data by removing rows with NaN values. Default is False.
     """
 
+    if type != "umbra" and type != "penumbra":
+        raise ValueError("Type must be either 'umbra' or 'penumbra'")
     #Here we just get the initdate from the config file we need that later in the function
     config = {}
     with open("../main.conf", "r") as file:
@@ -118,7 +123,7 @@ def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: 
     init_year, init_month, init_day, init_hour, init_minute, init_second
     )
 
-
+    
 
     #Now we open the actual file that we want to split
     if not path.endswith(".dat"):
@@ -128,8 +133,11 @@ def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: 
         raise ValueError("The file does not exist or cannot be opened")
     
     #List with each line in the file
-    lines = f.readlines()
-    linelistbefore = lines[0].strip().split(delimiter)
+    #lines = f.readlines()
+    lines = np.loadtxt(path, delimiter=delimiter, dtype=str, comments=None)
+    linelistbefore = np.char.strip(lines[0])
+    #lineslistbefore = np.char.split(linelistbefore, delimiter)
+    #linelistbefore = lines[0].strip().split(delimiter)
 
     eclipse_count = 0
     splitidxbefore = 0
@@ -139,7 +147,11 @@ def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: 
         if idx == 0:
             continue
         #Here from every line we remove the newline character and split the line into a list of strings
-        linelist = line.strip().split(delimiter)
+        #linelist = line.strip().split(delimiter)
+        linelist = np.char.strip(line)
+        #linelist = np.char.split(linelist, delimiter)
+
+        
         
         if abs(int(linelist[-1]) - int(linelistbefore[-1])) >= delta:
             #Here is what happens when we found a jump in time, meaning a new eclipse begins
@@ -147,22 +159,26 @@ def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: 
             splitidx = idx
             #Lets first get the date from the found splitidx:
             date = init_date + timedelta(seconds=int(linelistbefore[-1]))
-            datestr = date.strftime("%d%m%Y")
+            datestr = date.strftime("%Y%m%d")
 
 
-            with open("../data/split/" + datestr + "lonlat.dat", "w") as fsplit:
+            with open("../data/split/" + datestr + "lonlat_" + type + ".dat", "w") as fsplit:
                 linestowrite = lines[splitidxbefore:splitidx]
                 #If option clean is set to True, we clean the data along the way
                 #Since we are iterating through the lines anyway
                 if clean:
-                    deleteidx = []
+                    deleteidx = np.array([], dtype=int)
                     for kidx,k in enumerate(linestowrite):
-                        if "nan" in k or "NaN" in k or "NAN" in k:
-                            deleteidx.append(kidx)
+                        # Example: Remove lines where any element is "nan", "NaN", or "NAN"
+                        if any(val.lower() == "nan" for val in np.array(k, dtype=str)):
+                            deleteidx = np.append(deleteidx, kidx)
                     #now we remove the lines with NaN values:
-                    linestowrite = [itemlist for iidx, itemlist in enumerate(linestowrite) if iidx not in deleteidx]
+                    linestowrite = np.delete(linestowrite, deleteidx, axis=0)
+                    #linestowrite = [itemlist for iidx, itemlist in enumerate(linestowrite) if iidx not in deleteidx_set]
 
-                fsplit.writelines(linestowrite)
+                
+                
+                np.savetxt(fsplit, linestowrite, fmt="%s", delimiter=delimiter)
             splitidxbefore = idx
             eclipse_count += 1 
 
@@ -173,24 +189,26 @@ def lat_lon_split(path: str, delimiter: str = ",", delta: int = 24*3600, clean: 
     #The contents after that last split are not yet written to a file, so we
     #use splitidx to write the last file and if clean is set to True we again remove
     #NaN values from the data:
-
     linestowrite = lines[splitidx:]
 
     if clean:
-        deleteidx = []
+        deleteidx = np.array([], dtype=int)
         for kidx,k in enumerate(linestowrite):
-            if "nan" in k or "NaN" in k or "NAN" in k:
-                deleteidx.append(kidx)
-                #now we remove the lines with NaN values:
-        linestowrite = [itemlist for iidx, itemlist in enumerate(linestowrite) if iidx not in deleteidx]
+            # Example: Remove lines where any element is "nan", "NaN", or "NAN"
+            if any(val.lower() == "nan" for val in np.array(k, dtype=str)):
+                deleteidx = np.append(deleteidx, kidx)
+        #now we remove the lines with NaN values:
+        linestowrite = np.delete(linestowrite, deleteidx, axis=0)
         
     #splitidx is exactly the last index of the eclipse before the last one, so
     #we have to add one to it to get the date for the last eclipse -> lines[splitidx+1]....
-    date = init_date + timedelta(seconds=int(lines[splitidx+1].strip().split(delimiter)[-1]))
-    datestr = date.strftime("%d%m%Y")
+    lastdateline = np.char.strip(lines[splitidx+1])
+    date = init_date + timedelta(seconds=int(lastdateline[-1]))
+    datestr = date.strftime("%Y%m%d")
 
-    with open("../data/split/" + datestr + "lonlat.dat", "w") as fsplit:
-        fsplit.writelines(linestowrite)
+    with open("../data/split/" + datestr + "lonlat_" + type + ".dat", "w") as fsplit:
+        np.savetxt(fsplit, linestowrite, fmt="%s", delimiter=delimiter)
+
 
 
 
