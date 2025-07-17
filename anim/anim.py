@@ -7,21 +7,19 @@ import pandas as pd
 
 #First static plot of umbra 
 
-lon = [10]
-lat = [20]
+data = np.loadtxt("./02102024lonlattest.dat", delimiter=",")
+lon = data[:,0]
+lat = data[:,1]
 
-with open("./02102024lonlattest.dat", "r") as file:
-    lines = file.readlines()
-    for line in lines:
-        print(line.strip().split(sep=','))
+
          
 
 fig = plt.figure(figsize=(10, 5))
-ax = plt.axes(projection=ccrs.Orthographic())
+ax = plt.axes(projection=ccrs.Orthographic(-114,-20))
 ax.set_global()
 ax.coastlines()
 ax.add_feature(cfeature.LAND, facecolor='lightgray')
 ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
 
-ax.scatter(lon,lat,color='red', s = 50, transform=ccrs.PlateCarree(), label='Points')
-plt.show()
+ax.scatter(lon,lat,color='black', s=0.1, transform=ccrs.PlateCarree(), label='Points')
+plt.savefig("./umbra_plot.png", dpi=300, bbox_inches='tight')
