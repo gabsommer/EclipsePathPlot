@@ -70,7 +70,7 @@ def clean(input):
     
     Parameters
     ----------
-    test : np.ndarray
+    input : np.ndarray
         A 2D numpy array where each row represents a point with at least two elements.
     """
 
@@ -209,6 +209,19 @@ def lon_lat_split(path: str, type: str, delimiter: str = ",", delta: int = 24*36
     with open("../data/split/" + datestr + "lonlat_" + type + ".dat", "w") as fsplit:
         np.savetxt(fsplit, linestowrite, fmt="%s", delimiter=delimiter)
 
+def get_paths(path: str, type: str = "umbra") -> list:
+    """
+    Function return a list of paths and therefore a list of elcipses.
+
+    Parameters
+    ----------
+    path : str
+        The path to the directory containing all split eclipse files
+    type : str
+        The type of eclipse data to be processed, either "umbra" or "penumbra".
+        Raises ValueError if the type is not one of these.
+    """
+    return ["not implemented"]
 
 
 

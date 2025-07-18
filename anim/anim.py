@@ -4,6 +4,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import pandas as pd
 from matplotlib.patches import Polygon
+from matplotlib.animation import FuncAnimation
 
 from utils import clean_hull, lon_lat_split, clean
 
@@ -21,39 +22,71 @@ with open("../main.conf", "r") as configfile:
 
 umbra_res = config['umbra_res']
 penumbra_res = config['penumbra_res']
+animlength = config['animlength']
 
 
 
 
 
-print(f"[info] \033[34m/data/lonlat.dat\033[0m is being processed...")
-lon_lat_split("../data/lonlat.dat", type = "umbra", delimiter=",", clean=False)
-print("[info] Umbra data split completed.")
-print(f"[info] \033[34m/data/lonlat_in.dat\033[0m is being processed...")
-lon_lat_split("../data/lonlat_in.dat", type = "penumbra", delimiter=",", clean=False)
-print("[info] Penumbra data split completed.")
+#print(f"[info] \033[34m/data/lonlat.dat\033[0m is being processed...")
+#lon_lat_split("../data/lonlat.dat", type = "umbra", delimiter=",", clean=False)
+#print("[info] Umbra data split completed.")
+#print(f"[info] \033[34m/data/lonlat_in.dat\033[0m is being processed...")
+#lon_lat_split("../data/lonlat_in.dat", type = "penumbra", delimiter=",", clean=False)
+#print("[info] Penumbra data split completed.")
 
-data = np.loadtxt("../data/split/20241002lonlat_umbra.dat", delimiter=",")
-data = data.reshape(int(int(data.shape[0])/int(umbra_res)),int(umbra_res),3)
+data_umbra = np.loadtxt("../data/split/20241002lonlat_umbra.dat", delimiter=",")
+data_umbra = data_umbra.reshape(int(int(data_umbra.shape[0])/int(umbra_res)),int(umbra_res),3)
+data_penumbra = np.loadtxt("../data/split/20241002lonlat_penumbra.dat", delimiter=",")
+data_penumbra = data_penumbra.reshape(int(int(data_penumbra.shape[0])/int(penumbra_res)),int(penumbra_res),3)
 #TODO Clean data such that outliers are properly removed. There are numerical artefacts in the plot (umbra_plot.png).
 
-#pick test plot at 100
-data = clean(data[100,:,:])
-lon = data[:, 0]
-lat = data[:, 1]
 
+data_umbra = data_umbra[::5,:,:]
+data_umbra_clean = clean(data_umbra[50,:,:])
+lon = data_umbra_clean[:, 0]
+lat = data_umbra_clean[:, 1]
+
+#Plot Setup
 fig = plt.figure(figsize=(10, 5))
-ax = plt.axes(projection=ccrs.Orthographic(-114,-20))
+fig.patch.set_facecolor('black')
+ax = plt.axes(projection=ccrs.Orthographic(-80,-20))
+ax.set_facecolor('black')
 ax.set_global()
 ax.coastlines()
-ax.add_feature(cfeature.LAND, facecolor='lightgray')
+ax.add_feature(cfeature.LAND, facecolor='green')
 ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
+ax.set_title("Path of Totality for the 2024/10/02 Solar Eclipse", color = "white")
 
-#ax.scatter(lon,lat,color='black', s=0.1, transform=ccrs.PlateCarree(), label='Points')
-polygon = Polygon(np.column_stack((lon, lat)), closed=True, facecolor='black', alpha=0.5, transform=ccrs.PlateCarree())
+#TODO ani.save doesnt work anymore with gridlines turned on
+# Add gridlines for longitude and latitude
+#ax.gridlines(draw_labels=True, linewidth=0.5, color='black', alpha=0.5, linestyle='--')
+#gl.top_labels = False
+#gl.right_labels = False
+
+
+polygon = Polygon(np.column_stack((lon, lat)), closed=True, facecolor='black', alpha=0.8, transform=ccrs.PlateCarree())
 ax.add_patch(polygon)
 plt.savefig("./umbra_plot.png", dpi=600, bbox_inches='tight')
 print("[info] File saved as \033[34mumbra_plot.png\033[0m")
+
+skip = 5
+#Animation
+def update(frame):
+    # Example: shift polygon northward
+    new_data_clean = clean(data_umbra[frame,:,:])
+    new_lon = new_data_clean[:, 0]
+    new_lat = new_data_clean[:, 1]
+    polygon.set_xy(np.column_stack((new_lon, new_lat)))
+    return polygon,
+
+print("[info] Animating path of totality...")
+ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
+print("[info] Animation completed.")
+print("[info] Saving animation as MP4...")
+ani.save("umbra_anim.mp4", writer="ffmpeg", dpi=200, fps=int(data_umbra.shape[0]/int(animlength)))
+print("[info] Animation saved as \033[34mumbra_anim.mp4\033[0m")
+
 
 
 
