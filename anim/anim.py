@@ -6,7 +6,7 @@ import pandas as pd
 from matplotlib.patches import Polygon
 from matplotlib.animation import FuncAnimation
 
-from utils import clean_hull, lon_lat_split, clean
+from utils import clean_hull, lon_lat_split, clean, get_eclipses
 
 
 #import values from config file
@@ -25,7 +25,10 @@ penumbra_res = config['penumbra_res']
 animlength = config['animlength']
 
 
-
+eclipses = get_eclipses("../data/split")
+eclipse = 0
+skip = 5
+test_frame = 400
 
 
 #print(f"[info] \033[34m/data/lonlat.dat\033[0m is being processed...")
@@ -35,17 +38,22 @@ animlength = config['animlength']
 #lon_lat_split("../data/lonlat_in.dat", type = "penumbra", delimiter=",", clean=False)
 #print("[info] Penumbra data split completed.")
 
-data_umbra = np.loadtxt("../data/split/20241002lonlat_umbra.dat", delimiter=",")
+data_umbra = np.loadtxt("../data/split/" + eclipses[eclipse] + "lonlat_umbra.dat", delimiter=",")
 data_umbra = data_umbra.reshape(int(int(data_umbra.shape[0])/int(umbra_res)),int(umbra_res),3)
-data_penumbra = np.loadtxt("../data/split/20241002lonlat_penumbra.dat", delimiter=",")
+data_penumbra = np.loadtxt("../data/split/" + eclipses[eclipse] + "lonlat_penumbra.dat", delimiter=",")
 data_penumbra = data_penumbra.reshape(int(int(data_penumbra.shape[0])/int(penumbra_res)),int(penumbra_res),3)
 #TODO Clean data such that outliers are properly removed. There are numerical artefacts in the plot (umbra_plot.png).
 
 
-data_umbra = data_umbra[::5,:,:]
-data_umbra_clean = clean(data_umbra[50,:,:])
+data_umbra = data_umbra[::skip,:,:]
+data_umbra_clean = clean(data_umbra[test_frame,:,:])
 lon = data_umbra_clean[:, 0]
 lat = data_umbra_clean[:, 1]
+
+data_penumbra = data_penumbra[::skip,:,:]
+data_penumbra_clean = clean(data_penumbra[test_frame,:,:])
+lon_pen = data_penumbra_clean[:,0]
+lat_pen = data_penumbra_clean[:,1]
 
 #Plot Setup
 fig = plt.figure(figsize=(10, 5))
@@ -66,26 +74,35 @@ ax.set_title("Path of Totality for the 2024/10/02 Solar Eclipse", color = "white
 
 
 polygon = Polygon(np.column_stack((lon, lat)), closed=True, facecolor='black', alpha=0.8, transform=ccrs.PlateCarree())
+polygon_penumbra = Polygon(np.column_stack((lon_pen, lat_pen)), closed=True, facecolor='black', alpha=0.2, transform=ccrs.PlateCarree())
 ax.add_patch(polygon)
-plt.savefig("./umbra_plot.png", dpi=600, bbox_inches='tight')
-print("[info] File saved as \033[34mumbra_plot.png\033[0m")
+ax.add_patch(polygon_penumbra)
+plt.savefig(f"./testframe{test_frame}_plot.png", dpi=600, bbox_inches='tight')
+print(f"[info] File saved as \033[34mtestframe{test_frame}_plot.png\033[0m")
 
-skip = 5
 #Animation
 def update(frame):
-    # Example: shift polygon northward
-    new_data_clean = clean(data_umbra[frame,:,:])
-    new_lon = new_data_clean[:, 0]
-    new_lat = new_data_clean[:, 1]
+    # umbra frames
+    new_data_umbra_clean = clean(data_umbra[frame,:,:2])
+    new_data_umbra_clean_hull = clean_hull(new_data_umbra_clean)
+    new_lon = new_data_umbra_clean_hull[:, 0]
+    new_lat = new_data_umbra_clean_hull[:, 1]
+    #penumbra frames
+    new_data_penumbra_clean = clean(data_penumbra[frame,:,:2])
+    new_data_penumbra_clean_hull = clean_hull(new_data_penumbra_clean)
+    new_lon_pen = new_data_penumbra_clean_hull[:, 0]
+    new_lat_pen = new_data_penumbra_clean_hull[:, 1]
+
+    polygon_penumbra.set_xy(np.column_stack((new_lon_pen, new_lat_pen)))
     polygon.set_xy(np.column_stack((new_lon, new_lat)))
-    return polygon,
+    return polygon,polygon_penumbra,
 
 print("[info] Animating path of totality...")
 ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
 print("[info] Animation completed.")
-print("[info] Saving animation as MP4...")
-ani.save("umbra_anim.mp4", writer="ffmpeg", dpi=200, fps=int(data_umbra.shape[0]/int(animlength)))
-print("[info] Animation saved as \033[34mumbra_anim.mp4\033[0m")
+print("[info] Rendering animation as MP4...")
+ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=200, fps=int(data_umbra.shape[0]/int(animlength)))
+print(f"[info] Animation saved as \033[34m{eclipses[eclipse]}_anim.mp4\033[0m")
 
 
 

@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import math
 from datetime import datetime, timedelta
+import os
 
 
 def clean_hull(lst: np.ndarray, tol: int = 5) -> np.ndarray:
@@ -20,9 +21,10 @@ def clean_hull(lst: np.ndarray, tol: int = 5) -> np.ndarray:
 
     if lst.shape != (lst.shape[0], 2):
         raise ValueError(
-            "Input must be a numpy array of shape (n, 2) where n is the number of points."
+            f"Input must be a numpy array of shape (n, 2) where n is the number of points (resolution of (pen)umbra), but shape is {lst.shape}"
         )
-
+    if lst.shape[0] < 3:
+        return lst  # Not enough points to form a hull, keep the original list
     ##First calculcate each distance to the nearest neighbor by looping through the elements of the numpy array
     lst_neighbor_right = np.roll(lst, -1)
     lst_neighbor_left = np.roll(lst, 1)
@@ -209,7 +211,7 @@ def lon_lat_split(path: str, type: str, delimiter: str = ",", delta: int = 24*36
     with open("../data/split/" + datestr + "lonlat_" + type + ".dat", "w") as fsplit:
         np.savetxt(fsplit, linestowrite, fmt="%s", delimiter=delimiter)
 
-def get_paths(path: str, type: str = "umbra") -> list:
+def get_eclipses(path: str, type: str = "umbra") -> list:
     """
     Function return a list of paths and therefore a list of elcipses.
 
@@ -221,7 +223,18 @@ def get_paths(path: str, type: str = "umbra") -> list:
         The type of eclipse data to be processed, either "umbra" or "penumbra".
         Raises ValueError if the type is not one of these.
     """
-    return ["not implemented"]
+    if type != "umbra" and type != "penumbra":
+        raise ValueError("Type must be either 'umbra' or 'penumbra'")
+    if not os.path.exists(path):
+        raise ValueError("The file does not exist or cannot be opened")
+    if not os.path.isdir(path):
+        raise ValueError(f"{path} is not a directory")
+    eclipses = []
+    for filename in os.listdir(path):
+        eclipsestring = filename[:8]
+        if eclipsestring not in eclipses:
+            eclipses.append(filename[:8])
+    return eclipses
 
 
 
