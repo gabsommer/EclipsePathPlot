@@ -50,6 +50,12 @@ data_umbra_clean = clean(data_umbra[test_frame,:,:])
 lon = data_umbra_clean[:, 0]
 lat = data_umbra_clean[:, 1]
 
+#Debug output
+#Does not seem to work here
+print(data_umbra[test_frame,:,:2].shape)
+data_umbra_clean_hull = clean_hull(data_umbra[test_frame,:,:2])
+print(data_umbra_clean_hull.shape)
+
 data_penumbra = data_penumbra[::skip,:,:]
 data_penumbra_clean = clean(data_penumbra[test_frame,:,:])
 lon_pen = data_penumbra_clean[:,0]
