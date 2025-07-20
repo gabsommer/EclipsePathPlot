@@ -3,9 +3,10 @@ import pandas as pd
 import math
 from datetime import datetime, timedelta
 import os
+import matplotlib.pyplot as plt
 
 
-def clean_hull(lst: np.ndarray, tol: int = 5) -> np.ndarray:
+def clean_hull(lst: np.ndarray, tol: float = 1.5) -> np.ndarray:
     """
     Excludes outliers of the hull by checking if the points are within a certain distance from the average
     distance of the points to its nearest neighbor.
@@ -46,7 +47,6 @@ def clean_hull(lst: np.ndarray, tol: int = 5) -> np.ndarray:
     # return the clean list
     return lst
 
-
 def data_pd(absolutepath, plotpoints):
     """
     Reads data from a CSV file and reshapes it into a 3D numpy array.
@@ -65,7 +65,6 @@ def data_pd(absolutepath, plotpoints):
     datanp = datanp.reshape(int((datanp.shape[1]) / plotpoints), plotpoints, 3)
     return datanp
 
-
 def clean(input):
     """
     Deletes rows from a 2D numpy array where the first or second element is NaN.
@@ -82,7 +81,6 @@ def clean(input):
             del_idx = np.append(del_idx, int(k))
     output = np.delete(input, del_idx, axis=0)
     return output
-
 
 def lon_lat_split(path: str, type: str, delimiter: str = ",", delta: int = 24*3600, clean: bool = False) -> None:
     """
@@ -236,6 +234,21 @@ def get_eclipses(path: str, type: str = "umbra") -> list:
             eclipses.append(filename[:8])
     return eclipses
 
+def clean_hull2(input: np.ndarray,tol: int = 2) -> np.ndarray:
+    input_left = np.roll(input,1, axis = 0)
+    input_right = np.roll(input,-1, axis = 0)
 
+    input_normdiff_left = np.linalg.norm(input - input_left, axis = 1)
+    input_normdiff_right = np.linalg.norm(input - input_right, axis = 1)
+    input_meandiff = (input_normdiff_left + input_normdiff_right)*0.5
+   
+    if input_meandiff.shape[0] < 3:
+        return input
+    mean_diff = np.nanmean(input_meandiff)
+    killist = []
+    for idx,i in enumerate(input_meandiff):
+        if i > mean_diff * tol or np.isnan(i) == True:
+            killist.append(idx)
 
-        
+    input_clean = np.delete(input, killist, axis = 0)
+    return input_clean
