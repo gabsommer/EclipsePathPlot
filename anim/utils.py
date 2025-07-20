@@ -235,6 +235,18 @@ def get_eclipses(path: str, type: str = "umbra") -> list:
     return eclipses
 
 def clean_hull2(input: np.ndarray,tol: int = 2) -> np.ndarray:
+    """
+    Excludes outliers of the hull by checking if the points are within a certain distance from the average
+    distance of the points to its nearest neighbor.
+
+    Parameters
+    ----------
+    lst : np.ndarray
+        A numpy array of shape (n, 2) where n is the number of points and 2 represents lon and lat coordinates.
+    tol : int, optional
+        Tolerance factor to determine if a point is an outlier based on (tol) times its distance to the nearest
+        neighbors. The default is 5.
+    """
     input_left = np.roll(input,1, axis = 0)
     input_right = np.roll(input,-1, axis = 0)
 
