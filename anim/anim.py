@@ -28,7 +28,7 @@ init_second  = int(config['init_second'])
 init_dt = datetime(init_year, init_month, init_day, init_hour, init_min, init_second)
 
 eclipses = get_eclipses("../data/split")
-eclipse = 0
+eclipse = 6
 
 
 
@@ -98,7 +98,7 @@ def update(frame):
     new_lat = new_data_umbra_clean_hull[:, 1]
     #penumbra frames
     new_data_penumbra_clean = clean(data_penumbra[frame,:,:2])
-    new_data_penumbra_clean_hull = clean_hull2(new_data_penumbra_clean)
+    new_data_penumbra_clean_hull = clean_hull2(new_data_penumbra_clean, tol=1.2)
     new_lon_pen = new_data_penumbra_clean_hull[:, 0]
     new_lat_pen = new_data_penumbra_clean_hull[:, 1]
 

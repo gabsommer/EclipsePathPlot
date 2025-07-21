@@ -234,7 +234,7 @@ def get_eclipses(path: str, type: str = "umbra") -> list:
             eclipses.append(filename[:8])
     return eclipses
 
-def clean_hull2(input: np.ndarray,tol: int = 2) -> np.ndarray:
+def clean_hull2(input: np.ndarray,tol: float = 2) -> np.ndarray:
     """
     Excludes outliers of the hull by checking if the points are within a certain distance from the average
     distance of the points to its nearest neighbor.
