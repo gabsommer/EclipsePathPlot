@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import pandas as pd
 from matplotlib.patches import Polygon
 from matplotlib.animation import FuncAnimation
 from datetime import datetime, timedelta
@@ -80,12 +79,7 @@ ax.coastlines()
 ax.add_feature(cfeature.LAND, facecolor='green')
 ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
 ax.set_title("Path of Totality for the 2024/10/02 Solar Eclipse", color = "white")
-
-#TODO ani.save doesnt work anymore with gridlines turned on
-# Add gridlines for longitude and latitude
-#ax.gridlines(draw_labels=True, linewidth=0.5, color='black', alpha=0.5, linestyle='--')
-#gl.top_labels = False
-#gl.right_labels = False
+ax.gridlines(draw_labels=False, linewidth=0.5, color='black', alpha=0.5, linestyle='--', xlocs=np.arange(-180, 180, 15), ylocs=np.arange(-90, 90, 15))
 
 
 polygon = Polygon(np.column_stack((lon, lat)), closed=True, facecolor='black', alpha=0.8, transform=ccrs.PlateCarree())
