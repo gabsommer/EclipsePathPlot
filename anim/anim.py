@@ -17,15 +17,15 @@ with open("../main.conf", "r") as configfile:
             continue
         key, value = line.split("=", 1)
         config[key.strip()] = value.strip()
-umbra_res = config['umbra_res']
-penumbra_res = config['penumbra_res']
-init_year = config['init_year']
-init_month = config['init_month']
-init_day = config['init_day']
-init_hour = config['init_hour']
-init_min = config['init_min']
-init_second = config['init_second']
-init_dt = datetime(int(init_year), int(init_month), int(init_day), int(init_hour), int(init_min), int(init_second))
+umbra_res    = int(config['umbra_res'])
+penumbra_res = int(config['penumbra_res'])
+init_year    = int(config['init_year'])
+init_month   = int(config['init_month'])
+init_day     = int(config['init_day'])
+init_hour    = int(config['init_hour'])
+init_min     = int(config['init_min'])
+init_second  = int(config['init_second'])
+init_dt = datetime(init_year, init_month, init_day, init_hour, init_min, init_second)
 
 eclipses = get_eclipses("../data/split")
 eclipse = 0
@@ -41,9 +41,9 @@ eclipse = 0
 #print("[info] Penumbra data split completed.")
 
 data_umbra = np.loadtxt("../data/split/" + eclipses[eclipse] + "lonlat_umbra.dat", delimiter=",")
-data_umbra = data_umbra.reshape(int(int(data_umbra.shape[0])/int(umbra_res)),int(umbra_res),3)
+data_umbra = data_umbra.reshape(int(data_umbra.shape[0]/umbra_res),umbra_res,3)
 data_penumbra = np.loadtxt("../data/split/" + eclipses[eclipse] + "lonlat_penumbra.dat", delimiter=",")
-data_penumbra = data_penumbra.reshape(int(int(data_penumbra.shape[0])/int(penumbra_res)),int(penumbra_res),3)
+data_penumbra = data_penumbra.reshape(int(data_penumbra.shape[0]/penumbra_res),penumbra_res,3)
 
 #video parameters
 total_frames = data_umbra.shape[0]
@@ -112,7 +112,7 @@ print("[info] Animating path of totality...")
 ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
 print("[info] Animation completed.")
 print("[info] Rendering animation as MP4...")
-ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(data_umbra.shape[0]/int(animlength)))
+ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(config['animfps']))
 print(f"[info] Animation saved as \033[34m{eclipses[eclipse]}_anim.mp4\033[0m")
 
 
