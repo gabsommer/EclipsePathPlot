@@ -17,6 +17,7 @@ sandbox/
 *.png
 *.mp4
 *.exe
+*.gif
 
 #Pycache
 *.pyc
