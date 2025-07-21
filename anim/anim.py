@@ -51,13 +51,14 @@ if total_frames != data_penumbra.shape[0]:
     print(f"\033[38;5;208m[warning]\033[0m Total frames in umbra ({total_frames}) and penumbra ({data_penumbra.shape[0]}) do not match.")
 animlength = int(config['animlength'])
 skip = total_frames//(int(config["animlength"])*int(config['animfps']))
-
+center_lonlat = data_umbra[int(data_umbra.shape[0]/2),0,:2]
 
 data_umbra = data_umbra[::skip,:,:]
 data_umbra_clean = clean(data_umbra[0,:,:2])
 data_umbra_clean_hull = clean_hull2(data_umbra_clean)
 lon = data_umbra_clean[:, 0]
 lat = data_umbra_clean[:, 1]
+
 
 
 
@@ -72,7 +73,7 @@ lat_pen = data_penumbra_clean_hull[:,1]
 #Plot Setup
 fig = plt.figure(figsize=(10, 5))
 fig.patch.set_facecolor('black')
-ax = plt.axes(projection=ccrs.Orthographic(-80,-20))
+ax = plt.axes(projection=ccrs.Orthographic(center_lonlat[0],center_lonlat[1]))
 ax.set_facecolor('black')
 ax.set_global()
 ax.coastlines()
@@ -114,6 +115,23 @@ print("[info] Animation completed.")
 print("[info] Rendering animation as MP4...")
 ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(config['animfps']))
 print(f"[info] Animation saved as \033[34m{eclipses[eclipse]}_anim.mp4\033[0m")
+plt.close(fig)
+
+#testframe = -10
+#fig2 = plt.figure(figsize=(8, 6))
+#ax2 = fig2.add_subplot(1, 1, 1)
+#fig2.patch.set_facecolor('black')
+#ax2 = plt.axes(projection=ccrs.Orthographic(-80,-20))
+#ax2.set_facecolor('black')
+#ax2.set_global()
+#ax2.coastlines()
+#ax2.add_feature(cfeature.LAND, facecolor='green')
+#ax2.add_feature(cfeature.OCEAN, facecolor='lightblue')
+#ax2.set_title("[debug]", color = "white")
+##ax2.plot(data_penumbra[-10,:,0],data_penumbra[-10,:,1], color='black', alpha=0.2, transform=ccrs.PlateCarree())
+#polygon_penumbra = Polygon(np.column_stack((clean_hull2(data_penumbra[testframe,:,:])[:,0],clean_hull2(data_penumbra[testframe,:,:])[:,1])), closed=True, facecolor='black', alpha=0.2, transform=ccrs.PlateCarree())
+#ax2.add_patch(polygon_penumbra)
+#plt.show()
 
 
 
