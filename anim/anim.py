@@ -6,7 +6,7 @@ from matplotlib.patches import Polygon
 from matplotlib.animation import FuncAnimation
 from datetime import datetime, timedelta
 
-from utils import clean_hull, lon_lat_split, clean, get_eclipses, clean_hull2
+from utils import clean, get_eclipses, clean_hull2
 
 
 config = {}
@@ -98,7 +98,7 @@ def update(frame):
     new_lat = new_data_umbra_clean_hull[:, 1]
     #penumbra frames
     new_data_penumbra_clean = clean(data_penumbra[frame,:,:2])
-    new_data_penumbra_clean_hull = clean_hull2(new_data_penumbra_clean, tol=1.2)
+    new_data_penumbra_clean_hull = clean_hull2(new_data_penumbra_clean, tol=2)
     new_lon_pen = new_data_penumbra_clean_hull[:, 0]
     new_lat_pen = new_data_penumbra_clean_hull[:, 1]
 
@@ -109,14 +109,13 @@ def update(frame):
     polygon.set_xy(np.column_stack((new_lon, new_lat)))
     return polygon,polygon_penumbra,
 
-print("[info] Animating path of totality...")
-ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
-print("[info] Animation completed.")
 print("[info] Rendering animation as MP4...")
+ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
 ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(config['animfps']))
 print(f"[info] Animation saved as \033[34m{eclipses[eclipse]}_anim.mp4\033[0m")
 plt.close(fig)
 
+#Plotting setup for "Großkreis"
 #testframe = -10
 #fig2 = plt.figure(figsize=(8, 6))
 #ax2 = fig2.add_subplot(1, 1, 1)
