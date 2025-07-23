@@ -28,7 +28,7 @@ init_second  = int(config['init_second'])
 init_dt = datetime(init_year, init_month, init_day, init_hour, init_min, init_second)
 
 eclipses = get_eclipses("../data/split")
-eclipse = 6
+eclipse = 0
 
 
 
@@ -111,7 +111,7 @@ def update(frame):
 
 print("[info] Rendering animation as MP4...")
 ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
-ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(config['animfps']))
+ani.save(f"{eclipses[eclipse]}_anim.gif", writer="pillow", dpi=100, fps=int(config['animfps']))
 print(f"[info] Animation saved as \033[34m{eclipses[eclipse]}_anim.mp4\033[0m")
 plt.close(fig)
 

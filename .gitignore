@@ -18,6 +18,7 @@ sandbox/
 *.mp4
 *.exe
 *.gif
+!assets/example.gif
 
 #Pycache
 *.pyc
