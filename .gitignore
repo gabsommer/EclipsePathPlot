@@ -23,5 +23,8 @@ sandbox/
 #Pycache
 *.pyc
 
+#ini files
+*.ini
+
 #Old animation folder
 anim/old/
