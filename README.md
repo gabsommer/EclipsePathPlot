@@ -8,5 +8,5 @@ Calculates and animtes path of penumbra and umbra of moon during solar eclipses.
 Only depends on the "Eigen" library.
 
 <p align="left">
-  <img src="assets/example.gif" width="200" alt="ExampleEclipse">
+  <img src="assets/example.gif" width="1000" alt="ExampleEclipse">
 </p>
