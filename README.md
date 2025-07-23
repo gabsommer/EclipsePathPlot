@@ -7,6 +7,8 @@ Calculates and animtes path of penumbra and umbra of moon during solar eclipses.
 
 Only depends on the "Eigen" library.
 
+Example animation of Eclipse on 2/10/2024 as of version 23/07/2025:
+
 <p align="left">
   <img src="assets/example.gif" width="1000" alt="ExampleEclipse">
 </p>
