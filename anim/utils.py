@@ -284,13 +284,13 @@ def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: 
     #Transform points into cartesian coordinates on unit sphere
     r1 = np.array([math.cos(p1[1])*math.cos(p1[0]), math.cos(p1[1])*math.sin(p1[0]), math.sin(p1[1])],dtype=float)
     r2 = np.array([math.cos(p2[1])*math.cos(p2[0]), math.cos(p2[1])*math.sin(p2[0]), math.sin(p2[1])],dtype=float)
-    #Create [res] vectors in a list that point to chord of great circle between p1,p2
+    #Create [res] vectors in a list that point to chord of great circle between p1,p2 and normalize them so the point at the surface again
     k=np.linspace(0,1,res).reshape(res,1)
     Ik = r1+ k*(r2-r1)
     ik = Ik / np.linalg.norm(Ik, axis = 1, keepdims=True)
-    #now the iks need to be transofrmed into lons and lats again
+    print(ik)
+    #now the iks need to be transformed into longditudes and latitudes again
     lonslats = np.zeros(shape=(res,2))
-    print(r1,r2)
     for i in range(res):
         x = ik[i,0]
         y = ik[i,1]
@@ -298,10 +298,12 @@ def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: 
         if x < 0 and y > 0:
             lonslats[i,0] = math.degrees(math.atan(y/x)+math.pi)
         if x < 0 and y < 0:
+            #This is wrong somehow:
             lonslats[i,0] = math.degrees(math.atan(y/x)-math.pi)
         if x > 0 and y < 0:
             lonslats[i,0] = math.degrees(math.atan(y/x))
-        else:
+        if x > 0 and y > 0:
+        #somehow this overrides some cases
             lonslats[i,0] = math.degrees(math.atan(y/x))
         lonslats[i,1] = math.degrees(math.asin(z))
     return(lonslats)

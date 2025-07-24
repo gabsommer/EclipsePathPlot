@@ -6,7 +6,7 @@ from matplotlib.patches import Polygon
 from matplotlib.animation import FuncAnimation
 from datetime import datetime, timedelta
 
-from utils import clean, get_eclipses, clean_hull2
+from utils import clean, get_eclipses, clean_hull2, orthodrome
 
 
 config = {}
@@ -111,26 +111,29 @@ def update(frame):
 
 print("[info] Rendering animation as MP4...")
 ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
-ani.save(f"{eclipses[eclipse]}_anim.gif", writer="pillow", dpi=100, fps=int(config['animfps']))
+#ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(config['animfps']))
 print(f"[info] Animation saved as \033[34m{eclipses[eclipse]}_anim.mp4\033[0m")
 plt.close(fig)
 
 #Plotting setup for "Großkreis"
-#testframe = -10
-#fig2 = plt.figure(figsize=(8, 6))
-#ax2 = fig2.add_subplot(1, 1, 1)
-#fig2.patch.set_facecolor('black')
-#ax2 = plt.axes(projection=ccrs.Orthographic(-80,-20))
-#ax2.set_facecolor('black')
-#ax2.set_global()
-#ax2.coastlines()
-#ax2.add_feature(cfeature.LAND, facecolor='green')
-#ax2.add_feature(cfeature.OCEAN, facecolor='lightblue')
-#ax2.set_title("[debug]", color = "white")
-##ax2.plot(data_penumbra[-10,:,0],data_penumbra[-10,:,1], color='black', alpha=0.2, transform=ccrs.PlateCarree())
-#polygon_penumbra = Polygon(np.column_stack((clean_hull2(data_penumbra[testframe,:,:])[:,0],clean_hull2(data_penumbra[testframe,:,:])[:,1])), closed=True, facecolor='black', alpha=0.2, transform=ccrs.PlateCarree())
+orthodromedata = orthodrome([-30,+20],[-90,-60], res = 40)
+print(orthodromedata)
+testframe = -10
+fig2 = plt.figure(figsize=(8, 6))
+ax2 = fig2.add_subplot(1, 1, 1)
+fig2.patch.set_facecolor('black')
+ax2 = plt.axes(projection=ccrs.Orthographic(-80,-20))
+ax2.set_facecolor('black')
+ax2.set_global()
+ax2.coastlines()
+ax2.add_feature(cfeature.LAND, facecolor='green')
+ax2.add_feature(cfeature.OCEAN, facecolor='lightblue')
+ax2.set_title("[debug]", color = "white")
+ax2.scatter(orthodromedata[:,0],orthodromedata[:,1], color='black', alpha=0.2, transform=ccrs.PlateCarree())
+#polygon_penumbra = Polygon(np.column_stack((orthodromedata[:,0],orthodromedata[:,1])), closed=True, facecolor='black', alpha=0.2, transform=ccrs.PlateCarree())
 #ax2.add_patch(polygon_penumbra)
-#plt.show()
+#TODO Somehow one point is off
+plt.show()
 
 
 
