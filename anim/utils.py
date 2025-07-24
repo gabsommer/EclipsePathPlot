@@ -264,3 +264,44 @@ def clean_hull2(input: np.ndarray,tol: float = 2) -> np.ndarray:
 
     input_clean = np.delete(input, killist, axis = 0)
     return input_clean
+
+def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: int = 20) -> np.ndarray:
+    """
+    Given two points p1 and p2, returns list of (lon,lat)-points on an orthodrome connecting the points p1,p2
+
+    Parameters
+    ----------
+    p1 : np.ndarray
+        A numpy array of shape (2,) representing the first point (lon, lat).
+    p2 : np.ndarray
+        A numpy array of shape (2,) representing the second point (lon, lat).
+    res : int, optional
+        The number of points to generate along the orthodrome. Default is 20.
+    """
+    print("Not implemented")
+    p1 = np.radians(p1)
+    p2 = np.radians(p2)
+    #Transform points into cartesian coordinates on unit sphere
+    r1 = np.array([math.cos(p1[1])*math.cos(p1[0]), math.cos(p1[1])*math.sin(p1[0]), math.sin(p1[1])],dtype=float)
+    r2 = np.array([math.cos(p2[1])*math.cos(p2[0]), math.cos(p2[1])*math.sin(p2[0]), math.sin(p2[1])],dtype=float)
+    #Create [res] vectors in a list that point to chord of great circle between p1,p2
+    k=np.linspace(0,1,res).reshape(res,1)
+    Ik = r1+ k*(r2-r1)
+    ik = Ik / np.linalg.norm(Ik, axis = 1, keepdims=True)
+    #now the iks need to be transofrmed into lons and lats again
+    lonslats = np.zeros(shape=(res,2))
+    print(r1,r2)
+    for i in range(res):
+        x = ik[i,0]
+        y = ik[i,1]
+        z = ik[i,2]
+        if x < 0 and y > 0:
+            lonslats[i,0] = math.degrees(math.atan(y/x)+math.pi)
+        if x < 0 and y < 0:
+            lonslats[i,0] = math.degrees(math.atan(y/x)-math.pi)
+        if x > 0 and y < 0:
+            lonslats[i,0] = math.degrees(math.atan(y/x))
+        else:
+            lonslats[i,0] = math.degrees(math.atan(y/x))
+        lonslats[i,1] = math.degrees(math.asin(z))
+    return(lonslats)
