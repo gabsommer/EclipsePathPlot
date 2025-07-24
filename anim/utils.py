@@ -278,7 +278,6 @@ def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: 
     res : int, optional
         The number of points to generate along the orthodrome. Default is 20.
     """
-    print("Not implemented")
     p1 = np.radians(p1)
     p2 = np.radians(p2)
     #Transform points into cartesian coordinates on unit sphere
@@ -288,7 +287,6 @@ def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: 
     k=np.linspace(0,1,res).reshape(res,1)
     Ik = r1+ k*(r2-r1)
     ik = Ik / np.linalg.norm(Ik, axis = 1, keepdims=True)
-    print(ik)
     #now the iks need to be transformed into longditudes and latitudes again
     lonslats = np.zeros(shape=(res,2))
     for i in range(res):
@@ -305,5 +303,9 @@ def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: 
         if x > 0 and y > 0:
         #somehow this overrides some cases
             lonslats[i,0] = math.degrees(math.atan(y/x))
+        if x == 0 and y > 0:
+            lonslats[i,0] = 90
+        if x == 0 and y < 0:
+            lonslats[i,0] = -90
         lonslats[i,1] = math.degrees(math.asin(z))
     return(lonslats)

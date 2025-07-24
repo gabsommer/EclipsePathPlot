@@ -122,17 +122,19 @@ testframe = -10
 fig2 = plt.figure(figsize=(8, 6))
 ax2 = fig2.add_subplot(1, 1, 1)
 fig2.patch.set_facecolor('black')
-ax2 = plt.axes(projection=ccrs.Orthographic(-80,-20))
-ax2.set_facecolor('black')
-ax2.set_global()
-ax2.coastlines()
-ax2.add_feature(cfeature.LAND, facecolor='green')
-ax2.add_feature(cfeature.OCEAN, facecolor='lightblue')
+#ax2 = plt.axes(projection=ccrs.Orthographic(-80,-20))
+ax2 = plt.axes()
+#ax2.set_facecolor('black')
+
+#ax2.set_global()
+#ax2.coastlines()
+#ax2.add_feature(cfeature.LAND, facecolor='green')
+#ax2.add_feature(cfeature.OCEAN, facecolor='lightblue')
 ax2.set_title("[debug]", color = "white")
-ax2.scatter(orthodromedata[:,0],orthodromedata[:,1], color='black', alpha=0.2, transform=ccrs.PlateCarree())
+#ax2.scatter(orthodromedata[:,0],orthodromedata[:,1], color='black', alpha=0.2, transform=ccrs.PlateCarree())
+ax2.scatter(orthodromedata[:,0],orthodromedata[:,1], color='black', alpha=0.2)
 #polygon_penumbra = Polygon(np.column_stack((orthodromedata[:,0],orthodromedata[:,1])), closed=True, facecolor='black', alpha=0.2, transform=ccrs.PlateCarree())
 #ax2.add_patch(polygon_penumbra)
-#TODO Somehow one point is off
 plt.show()
 
 
