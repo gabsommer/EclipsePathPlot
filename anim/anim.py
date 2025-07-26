@@ -6,7 +6,7 @@ from matplotlib.patches import Polygon
 from matplotlib.animation import FuncAnimation
 from datetime import datetime, timedelta
 
-from utils import clean, get_eclipses, clean_hull2, orthodrome
+from utils import clean, get_eclipses, clean_hull2, orthodrome, fill_orthodrome
 
 
 config = {}
@@ -87,6 +87,7 @@ polygon = Polygon(np.column_stack((lon, lat)), closed=True, facecolor='black', a
 polygon_penumbra = Polygon(np.column_stack((lon_pen, lat_pen)), closed=True, facecolor='black', alpha=0.2, transform=ccrs.PlateCarree())
 ax.add_patch(polygon)
 ax.add_patch(polygon_penumbra)
+scat = ax.scatter(lon,lat,transform=ccrs.PlateCarree(),color='black',s=2.5)
 
 #Animation
 def update(frame):
@@ -99,43 +100,46 @@ def update(frame):
     #penumbra frames
     new_data_penumbra_clean = clean(data_penumbra[frame,:,:2])
     new_data_penumbra_clean_hull = clean_hull2(new_data_penumbra_clean, tol=2)
-    new_lon_pen = new_data_penumbra_clean_hull[:, 0]
-    new_lat_pen = new_data_penumbra_clean_hull[:, 1]
+    new_data_penumbra_clean_hull_full = fill_orthodrome(new_data_penumbra_clean_hull)
+    new_lon_pen = new_data_penumbra_clean_hull_full[:, 0]
+    new_lat_pen = new_data_penumbra_clean_hull_full[:, 1]
 
     dt = init_dt + timedelta(seconds=seconds)
-    ax.set_title(f"Path of Totality: {dt} UTC", color = "white")
+    ax.set_title(f"Path of Totality: {dt} UTC Frame: {frame}", color = "white")
 
     polygon_penumbra.set_xy(np.column_stack((new_lon_pen, new_lat_pen)))
     polygon.set_xy(np.column_stack((new_lon, new_lat)))
-    return polygon,polygon_penumbra,
+    scat.set_offsets([[new_lon_pen, new_lat_pen]])
+    return polygon, polygon_penumbra, scat,
 
 print("[info] Rendering animation as MP4...")
 ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
-#ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(config['animfps']))
+ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(config['animfps']))
 print(f"[info] Animation saved as \033[34m{eclipses[eclipse]}_anim.mp4\033[0m")
 plt.close(fig)
 
-#Plotting setup for "Großkreis"
-orthodromedata = orthodrome([-30,+20],[-90,-60], res = 40)
-print(orthodromedata)
-testframe = -10
-fig2 = plt.figure(figsize=(8, 6))
-ax2 = fig2.add_subplot(1, 1, 1)
-fig2.patch.set_facecolor('black')
-#ax2 = plt.axes(projection=ccrs.Orthographic(-80,-20))
-ax2 = plt.axes()
-#ax2.set_facecolor('black')
 
-#ax2.set_global()
-#ax2.coastlines()
-#ax2.add_feature(cfeature.LAND, facecolor='green')
-#ax2.add_feature(cfeature.OCEAN, facecolor='lightblue')
-ax2.set_title("[debug]", color = "white")
-#ax2.scatter(orthodromedata[:,0],orthodromedata[:,1], color='black', alpha=0.2, transform=ccrs.PlateCarree())
-ax2.scatter(orthodromedata[:,0],orthodromedata[:,1], color='black', alpha=0.2)
-#polygon_penumbra = Polygon(np.column_stack((orthodromedata[:,0],orthodromedata[:,1])), closed=True, facecolor='black', alpha=0.2, transform=ccrs.PlateCarree())
-#ax2.add_patch(polygon_penumbra)
-plt.show()
+
+
+
+
+#Sandbox
+testframe = -10
+testdata_penumbra_clean = clean(data_penumbra[testframe,:,:2])
+testdata_penumbra_clean_hull = clean_hull2(testdata_penumbra_clean)
+
+fig = plt.figure(figsize=(5,5))
+fig.patch.set_facecolor('black')
+ax = plt.axes(projection=ccrs.Orthographic(center_lonlat[0],center_lonlat[1]))
+ax.set_facecolor('black')
+ax.set_global()
+ax.coastlines()
+ax.add_feature(cfeature.LAND, facecolor='green')
+ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
+ax.scatter(testdata_penumbra_clean_hull[:,0],testdata_penumbra_clean_hull[:,1],s=2.5,marker='x', color='black',transform=ccrs.PlateCarree())
+orthodromepoints = fill_orthodrome(testdata_penumbra_clean_hull)
+ax.scatter(orthodromepoints[:,0],orthodromepoints[:,1],color="red",s=5,marker='o',transform=ccrs.PlateCarree())
+#plt.show()
 
 
 

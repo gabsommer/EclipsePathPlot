@@ -234,7 +234,7 @@ def get_eclipses(path: str, type: str = "umbra") -> list:
             eclipses.append(filename[:8])
     return eclipses
 
-def clean_hull2(input: np.ndarray,tol: float = 2) -> np.ndarray:
+def clean_hull2(input: np.ndarray,tol: float = 3) -> np.ndarray:
     """
     Excludes outliers of the hull by checking if the points are within a certain distance from the average
     distance of the points to its nearest neighbor.
@@ -267,7 +267,7 @@ def clean_hull2(input: np.ndarray,tol: float = 2) -> np.ndarray:
 
 def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: int = 20) -> np.ndarray:
     """
-    Given two points p1 and p2, returns list of (lon,lat)-points on an orthodrome connecting the points p1,p2
+    Helperfunction: Given two points p1 and p2, returns list of (lon,lat)-points on an orthodrome connecting the points p1,p2
 
     Parameters
     ----------
@@ -309,3 +309,52 @@ def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: 
             lonslats[i,0] = -90
         lonslats[i,1] = math.degrees(math.asin(z))
     return(lonslats)
+
+def fill_orthodrome(data: np.ndarray | list[float], res: int = 20, tol: int = 2) -> np.ndarray:
+    """
+    Given a 2d shape of a shadow it finds loose ends when shadow moves out of the hemisphere and interpolates an orthodrome
+
+    Parameters
+    ----------
+    data : np.ndarray
+        A numpy array of shape (2,n) being the input data.
+    res : int, optional
+        The number of points to generate along the orthodrome. Default is 20.
+    """
+    if isinstance(data, list):
+        data = np.array(data,dtype=float)
+    if isinstance(data, np.ndarray):
+        if data.shape != (data.shape[0],2):
+            raise ValueError(f"[error] input data in loose_ends needs to have shape (n,2) but data with shape {data.shape} was given")
+    #average distances:
+
+
+    distances = np.roll(data,-1,axis=0)-data
+    #print(distances)
+    norms = np.linalg.norm(distances,axis=1)
+    #print(norms)
+    idx1 = np.argmax(norms)
+    idx2 = (idx1 + 1) % data.shape[0]
+    p1 = data[idx1,:]
+    p2 = data[idx2,:]
+    data_noends = np.delete(data,[idx1,idx2], axis = 0)
+    gap = orthodrome(p1,p2)
+    return np.concatenate((data_noends,gap),axis=0)
+    
+
+
+
+
+testdata = np.array([
+    [2,2],
+    [3,2],
+    [4,6],
+    [6,9],
+    [10,15],
+    [1,1]
+    ])
+
+
+
+
+
