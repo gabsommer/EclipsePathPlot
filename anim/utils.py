@@ -6,65 +6,6 @@ import os
 import matplotlib.pyplot as plt
 
 
-def clean_hull(lst: np.ndarray, tol: float = 1.5) -> np.ndarray:
-    """
-    Excludes outliers of the hull by checking if the points are within a certain distance from the average
-    distance of the points to its nearest neighbor.
-
-    Parameters
-    ----------
-    lst : np.ndarray
-        A numpy array of shape (n, 2) where n is the number of points and 2 represents lon and lat coordinates.
-    tol : int, optional
-        Tolerance factor to determine if a point is an outlier based on (tol) times its distance to the nearest
-        neighbors. The default is 5.
-    """
-
-    if lst.shape != (lst.shape[0], 2):
-        raise ValueError(
-            f"Input must be a numpy array of shape (n, 2) where n is the number of points (resolution of (pen)umbra), but shape is {lst.shape}"
-        )
-    if lst.shape[0] < 3:
-        return lst  # Not enough points to form a hull, keep the original list
-    ##First calculcate each distance to the nearest neighbor by looping through the elements of the numpy array
-    lst_neighbor_right = np.roll(lst, -1)
-    lst_neighbor_left = np.roll(lst, 1)
-    #TODO Why np.linalg.norm ? This should be sum, no ?
-    lst_distance_right = np.linalg.norm(lst - lst_neighbor_right, axis=1)
-    lst_distance_left = np.linalg.norm(lst - lst_neighbor_left, axis=1)
-
-    mean_distance = np.mean((lst_distance_right + lst_distance_left) * 0.5)
-
-    for i in range(len(lst_distance_right)):
-        if (
-            lst_distance_right[i] > mean_distance * tol
-            and lst_distance_left[i] > mean_distance * tol
-        ):
-            # If the distance to the two nearest neighbors is greater than the mean distance times the tolerance,
-            np.delete(lst, i, axis=0)
-            # we consider this point an outlier and remove it.
-
-    # return the clean list
-    return lst
-
-def data_pd(absolutepath, plotpoints):
-    """
-    Reads data from a CSV file and reshapes it into a 3D numpy array.
-
-    Parameters
-    ----------
-    absolutepath : str
-        The absolute path to the CSV file containing the data.
-    plotpoints : int
-        The number of points to plot in each time step.
-    """
-    data = pd.read_csv(absolutepath, header=None)
-    datanp = data.to_numpy()
-    datanp = datanp.astype(float)
-    datanp = np.expand_dims(datanp, axis=0)
-    datanp = datanp.reshape(int((datanp.shape[1]) / plotpoints), plotpoints, 3)
-    return datanp
-
 def clean(input):
     """
     Deletes rows from a 2D numpy array where the first or second element is NaN.
@@ -345,19 +286,7 @@ def fill_orthodrome(data: np.ndarray | list[float], res: int = 20, tol: float = 
         return np.concatenate((data_noends,gap),axis=0)
     else:
         return data
-    
 
-
-
-
-testdata = np.array([
-    [2,2],
-    [3,2],
-    [4,6],
-    [6,9],
-    [10,15],
-    [1,1]
-    ])
 
 
 

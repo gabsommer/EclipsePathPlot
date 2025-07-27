@@ -6,7 +6,7 @@ from matplotlib.patches import Polygon
 from matplotlib.animation import FuncAnimation
 from datetime import datetime, timedelta
 
-from utils import clean, get_eclipses, clean_hull2, orthodrome, fill_orthodrome
+from utils import clean, get_eclipses, clean_hull2, fill_orthodrome
 
 
 config = {}
@@ -29,8 +29,6 @@ init_dt = datetime(init_year, init_month, init_day, init_hour, init_min, init_se
 
 eclipses = get_eclipses("../data/split")
 eclipse = 0
-
-
 
 
 #print(f"[info] \033[34m/data/lonlat.dat\033[0m is being processed...")
