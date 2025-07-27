@@ -91,6 +91,7 @@ scat = ax.scatter(lon,lat,transform=ccrs.PlateCarree(),color='black',s=2.5)
 
 #Animation
 def update(frame):
+    #TODO move processing out of loop, only plot points in loops
     seconds = int(data_umbra[frame,0,2])
     # umbra frames
     new_data_umbra_clean = clean(data_umbra[frame,:,:2])
@@ -109,6 +110,8 @@ def update(frame):
 
     polygon_penumbra.set_xy(np.column_stack((new_lon_pen, new_lat_pen)))
     polygon.set_xy(np.column_stack((new_lon, new_lat)))
+    progress = (frame/total_frames)*100
+    print(f"{progress:.1f}%",end='\r')
     #scat.set_offsets([[new_lon_pen, new_lat_pen]])
     return polygon, polygon_penumbra,
 
