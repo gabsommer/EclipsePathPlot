@@ -28,7 +28,7 @@ init_second  = int(config['init_second'])
 init_dt = datetime(init_year, init_month, init_day, init_hour, init_min, init_second)
 
 eclipses = get_eclipses("../data/split")
-eclipse = 0
+eclipse = 6
 
 
 #print(f"[info] \033[34m/data/lonlat.dat\033[0m is being processed...")
@@ -98,8 +98,9 @@ def update(frame):
     new_lat = new_data_umbra_clean_hull[:, 1]
     #penumbra frames
     new_data_penumbra_clean = clean(data_penumbra[frame,:,:2])
-    new_data_penumbra_clean_hull = clean_hull2(new_data_penumbra_clean, tol=2)
-    new_data_penumbra_clean_hull_full = fill_orthodrome(new_data_penumbra_clean_hull,res=100)
+    new_data_penumbra_clean_hull = clean_hull2(new_data_penumbra_clean, tol=1.2)
+    #removed hull for debugging
+    new_data_penumbra_clean_hull_full = fill_orthodrome(new_data_penumbra_clean,res=20)
     new_lon_pen = new_data_penumbra_clean_hull_full[:, 0]
     new_lat_pen = new_data_penumbra_clean_hull_full[:, 1]
 
@@ -110,7 +111,7 @@ def update(frame):
     polygon.set_xy(np.column_stack((new_lon, new_lat)))
     progress = (frame/total_frames)*100
     print(f"{progress:.1f}%",end='\r')
-    #scat.set_offsets([[new_lon_pen, new_lat_pen]])
+    scat.set_offsets(np.column_stack((new_lon_pen, new_lat_pen)))
     return polygon, polygon_penumbra,
 
 

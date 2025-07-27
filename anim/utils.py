@@ -152,7 +152,7 @@ def lon_lat_split(path: str, type: str, delimiter: str = ",", delta: int = 24*36
 
 def get_eclipses(path: str, type: str = "umbra") -> list:
     """
-    Function return a list of paths and therefore a list of elcipses.
+    Function returns a list of paths and therefore a list of elcipses.
 
     Parameters
     ----------
@@ -176,6 +176,7 @@ def get_eclipses(path: str, type: str = "umbra") -> list:
     return eclipses
 
 def clean_hull2(input: np.ndarray,tol: float = 3) -> np.ndarray:
+    #TODO Clean clusters of outliers instead of just one points
     """
     Excludes outliers of the hull by checking if the points are within a certain distance from the average
     distance of the points to its nearest neighbor.
