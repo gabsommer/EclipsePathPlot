@@ -310,7 +310,7 @@ def orthodrome(p1: np.ndarray | list[float], p2: np.ndarray | list[float], res: 
         lonslats[i,1] = math.degrees(math.asin(z))
     return(lonslats)
 
-def fill_orthodrome(data: np.ndarray | list[float], res: int = 20, tol: int = 2) -> np.ndarray:
+def fill_orthodrome(data: np.ndarray | list[float], res: int = 20, tol: float = 2) -> np.ndarray:
     """
     Given a 2d shape of a shadow it finds loose ends when shadow moves out of the hemisphere and interpolates an orthodrome
 
@@ -320,26 +320,31 @@ def fill_orthodrome(data: np.ndarray | list[float], res: int = 20, tol: int = 2)
         A numpy array of shape (2,n) being the input data.
     res : int, optional
         The number of points to generate along the orthodrome. Default is 20.
+    tol: float, optional
+        The multiplication of tol with the average gaps determines when a gap is defined as a gap that is to be filled with an orthodrome
     """
     if isinstance(data, list):
         data = np.array(data,dtype=float)
     if isinstance(data, np.ndarray):
         if data.shape != (data.shape[0],2):
             raise ValueError(f"[error] input data in loose_ends needs to have shape (n,2) but data with shape {data.shape} was given")
-    #average distances:
 
 
     distances = np.roll(data,-1,axis=0)-data
-    #print(distances)
     norms = np.linalg.norm(distances,axis=1)
-    #print(norms)
+    norms_mean = norms.mean()
+
     idx1 = np.argmax(norms)
     idx2 = (idx1 + 1) % data.shape[0]
     p1 = data[idx1,:]
     p2 = data[idx2,:]
-    data_noends = np.delete(data,[idx1,idx2], axis = 0)
-    gap = orthodrome(p1,p2)
-    return np.concatenate((data_noends,gap),axis=0)
+    #only if gap is large enough use orthodrome to fillwith great circle
+    if norms[idx1] > tol * norms_mean:
+        data_noends = np.delete(data,[idx1,idx2], axis = 0)
+        gap = orthodrome(p1,p2,res)
+        return np.concatenate((data_noends,gap),axis=0)
+    else:
+        return data
     
 
 

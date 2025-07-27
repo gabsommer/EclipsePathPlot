@@ -100,7 +100,7 @@ def update(frame):
     #penumbra frames
     new_data_penumbra_clean = clean(data_penumbra[frame,:,:2])
     new_data_penumbra_clean_hull = clean_hull2(new_data_penumbra_clean, tol=2)
-    new_data_penumbra_clean_hull_full = fill_orthodrome(new_data_penumbra_clean_hull)
+    new_data_penumbra_clean_hull_full = fill_orthodrome(new_data_penumbra_clean_hull,res=100)
     new_lon_pen = new_data_penumbra_clean_hull_full[:, 0]
     new_lat_pen = new_data_penumbra_clean_hull_full[:, 1]
 
@@ -109,8 +109,9 @@ def update(frame):
 
     polygon_penumbra.set_xy(np.column_stack((new_lon_pen, new_lat_pen)))
     polygon.set_xy(np.column_stack((new_lon, new_lat)))
-    scat.set_offsets([[new_lon_pen, new_lat_pen]])
-    return polygon, polygon_penumbra, scat,
+    #scat.set_offsets([[new_lon_pen, new_lat_pen]])
+    return polygon, polygon_penumbra,
+
 
 print("[info] Rendering animation as MP4...")
 ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
