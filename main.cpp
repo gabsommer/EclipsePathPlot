@@ -32,15 +32,6 @@ using namespace std;
 using namespace std::chrono;
 using namespace Eigen;
 
-double r_pow_3(double x,double y) {
-	double output,inter;
-	inter = pow(x,2)+pow(y,2);
-	output = pow(inter,3./2.);
-		
-	return output;
-}
-
-
 int main(void){
 	
 	//get config values from config file:
@@ -86,13 +77,13 @@ int main(void){
 	Vector3d omega;
 	omega << 1.54277026861935e1, 2.528775803839025e3, 5.832096956033017e3;
 
-	cout << endl << "Reference date is "
+	cout << endl << "[info] Reference date is "
 	<< setw(2) << setfill('0') << init_year << "/" 
 	<< setw(2) << setfill('0') << init_month << "/" 
 	<< setw(2) << setfill('0') << init_day << " " 
 	<< setw(2) << setfill('0') << init_hour << ":" 
 	<< setw(2) << setfill('0') << init_min << ":" 
-	<< setw(2) << setfill('0') << init_second << "UTC.\nNumber of days to calculate (integer): [90] ";
+	<< setw(2) << setfill('0') << init_second << "UTC.\n[input] Number of days to calculate (integer): [90] ";
 
 	getline(cin, input);
 	if (input.empty()) {
@@ -118,7 +109,7 @@ int main(void){
 	//	N = stoi(input);
 	//}
 	double t_delta;
-	cout << "Integration step size in seconds: [10] ";
+	cout << "[input] Integration step size in seconds: [10] ";
 	
 	getline(cin, input);
 
@@ -305,7 +296,7 @@ int main(void){
 		{
 			spacebar = 0;
 		}
-		cout << "Integrating differential equation" << setw(6+spacebar) << setfill(' ') << " \033[32m" << progress*100.0 << "%" << setw(spacebar) << "\033[0m" << " [";
+		cout << "[calculation] Integrating differential equation" << setw(6+spacebar) << setfill(' ') << " \033[32m" << progress*100.0 << "%" << setw(spacebar) << "\033[0m" << " [";
 		pos = barWidth * progress;
 		for (int j = 0; j < barWidth;  j++) {
 			if (j < pos) cout << "=";
@@ -341,10 +332,10 @@ int main(void){
 	ifstream pos_ems_ifstream("./data/pos_ems.dat");
 	ofstream param_ems_ofstream("./data/param_ems.dat");
 	ofstream umbraisx_ems_ofstream("./data/umbraisx_ems.dat");
-	ofstream latlong_ofstream("./data/lonlat.dat");
+	ofstream lonlat_ofstream("./data/lonlat.dat");
 	ofstream param_ems_in_ofstream("./data/param_ems_in.dat");
 	ofstream umbraisx_ems_in_ofstream("./data/umbraisx_ems_in.dat");
-	ofstream latlong_in_ofstream("./data/lonlat_in.dat");
+	ofstream lonlat_in_ofstream("./data/lonlat_in.dat");
 
 	//Initialising progress bar
 	progress = 0.0;
@@ -393,13 +384,13 @@ int main(void){
 			param_ems_ofstream << setprecision(10) << r.row(0)(0) << "\t" << ps.transpose().row(i).format(TabFormat) <<"\t" << us.transpose().row(i).format(TabFormat) << "\n";
 			umbraisx_ems_ofstream << setprecision(10) << r.row(0)(0) << "\t" << earth_isx.transpose().row(i).format(TabFormat) << "\n";
 			//Here we calculate the latitude and longitude of the intersection points and write them to a .csv file whose format is defined in the CSVFormat variable
-			latlong_ofstream << lonlat(earth_isx.transpose().row(i),r.row(0).segment(4,3),r.row(0).segment(1,3), omega,int(r.row(0)(0))).transpose().format(CSVFormat) << "," << int(r.row(0)(0)) << "\n";
+			lonlat_ofstream << lonlat(earth_isx.transpose().row(i),r.row(0).segment(4,3),r.row(0).segment(1,3), omega,int(r.row(0)(0))).transpose().format(CSVFormat) << "," << int(r.row(0)(0)) << "\n";
 		}
 		//The same thing is done for the penumbra parameters and intersections
 		for (size_t i = 0; i < penumbra_res; i++) {
 			param_ems_in_ofstream << setprecision(10) << r.row(0)(0) << "\t" << ps_in.transpose().row(i).format(TabFormat) <<"\t" << us_in.transpose().row(i).format(TabFormat) << "\n";
 			umbraisx_ems_in_ofstream << setprecision(10) << r.row(0)(0) << "\t" << earth_isx_in.transpose().row(i).format(TabFormat) << "\n";
-			latlong_in_ofstream << lonlat(earth_isx_in.transpose().row(i),r.row(0).segment(4,3),r.row(0).segment(1,3), omega,int(r.row(0)(0))).transpose().format(CSVFormat) << "," << int(r.row(0)(0)) << "\n";
+			lonlat_in_ofstream << lonlat(earth_isx_in.transpose().row(i),r.row(0).segment(4,3),r.row(0).segment(1,3), omega,int(r.row(0)(0))).transpose().format(CSVFormat) << "," << int(r.row(0)(0)) << "\n";
 		}
 
 
@@ -419,7 +410,7 @@ int main(void){
 				spacebar = 0;
 			}
 
-			cout << "Calculating shadow " << setw(20+spacebar) << "\033[32m" << int(progress*100.0) << "%" << setw(spacebar) << "\033[0m" << " [";
+			cout << "[calculation] Calculating shadow " << setw(20+spacebar) << "\033[32m" << int(progress*100.0) << "%" << setw(spacebar) << "\033[0m" << " [";
 			pos = barWidth * progress;
 			for (int j = 0; j < barWidth;  j++) {
 				if (j < pos) cout << "=";
@@ -437,10 +428,10 @@ int main(void){
 	pos_ems_ifstream.close();
 	umbraisx_ems_ofstream.close();	
 	param_ems_ofstream.close();
-	latlong_ofstream.close();
+	lonlat_ofstream.close();
 	param_ems_in_ofstream.close();
 	umbraisx_ems_in_ofstream.close();
-	latlong_in_ofstream.close();
+	lonlat_in_ofstream.close();
 
 	
 	auto duration = duration_cast<milliseconds>(stop-start);
@@ -449,36 +440,36 @@ int main(void){
 
 	double r_m_end = sqrt(pow(r.row(1)(7)-r.row(1)(4),2)+pow(r.row(1)(8)-r.row(1)(5),2)+pow(r.row(1)(9)-r.row(1)(6),2));	
 
-	cout << endl << "=> END OF INTEGRATION: " << duration.count() << " ms" << endl << endl;
+	cout << endl << "[info] => END OF INTEGRATION: " << duration.count() << " ms" << endl << endl;
 	
-	cout << "Distance Sun-Earth after " << days << " days: " <<  r_end/1e9 << " million km" << endl;
+	cout << "[info] Distance Sun-Earth after " << days << " days: " <<  r_end/1e9 << " million km" << endl;
 	
-	cout << "Distance Earth-Moon after " << days << " days: " << r_m_end/1e6 << " thousand km\n" << endl;
+	cout << "[info] Distance Earth-Moon after " << days << " days: " << r_m_end/1e6 << " thousand km\n" << endl;
 
 	vector<int> blocks = count_blocks(eclipse_flags, t_delta);
 	int num_eclipses = blocks[0];
 	if (blocks.size() == 1) {
 		cout << "\033[34m 0 \033[0m" << endl;
-		cout << endl << "Data files created in ./data/ directory." << endl;
-		cout << "No eclipses found. Program finished successfully." << endl;
+		cout << endl << "[info] Data files created in ./data/ directory." << endl;
+		cout << "[info] No eclipses found. Program finished successfully." << endl;
 	} 
 	else {
 		//This if statement is just for to get the plural of the word eclipse(s) correct
 		if (blocks.size() == 2) {
-		cout << "\033[34m" << num_eclipses << "\033[0m eclipse found in the specified timeframe." << endl;
+		cout << "[info] \033[34m" << num_eclipses << "\033[0m eclipse found in the specified timeframe." << endl;
 			}
 		else {
-			cout << "\033[34m" << num_eclipses << "\033[0m eclipses found in the specified timeframe." << endl;
+			cout << "[info] \033[34m" << num_eclipses << "\033[0m eclipses found in the specified timeframe." << endl;
 		}
-		cout << "Eclipses occur at the following times (UTC):" << endl;
+		cout << "[info] Eclipses occur at the following times (UTC):" << endl;
 		for (size_t i = 1; i < blocks.size(); i++) {
 			cout << "\033[34m" << i << "." << "\033[0m ";
 			print_time("Jul 11 2024 12:00:00", blocks[i]);
 			cout << endl;
 			//cout << "Debugging index: " << blocks[i] << endl;
 		}
-		cout << endl << "Data files created in \"./data/\" directory." << endl;
-		cout << "Program finished successfully." << endl;
+		cout << endl << "[info] Data files created in \"./data/\" directory." << endl;
+		cout << "[info] Program finished successfully." << endl;
 	}
 	return 0;
 
