@@ -5,8 +5,9 @@ import cartopy.feature as cfeature
 from matplotlib.patches import Polygon
 from matplotlib.animation import FuncAnimation
 from datetime import datetime, timedelta
+import os
 
-from utils import clean, get_eclipses, clean_hull2, fill_orthodrome
+from utils import clean, get_eclipses, clean_hull2, fill_orthodrome, lon_lat_split
 
 
 config = {}
@@ -49,6 +50,7 @@ if total_frames != data_penumbra.shape[0]:
     print(f"\033[38;5;208m[warning]\033[0m Total frames in umbra ({total_frames}) and penumbra ({data_penumbra.shape[0]}) do not match.")
 animlength = int(config['animlength'])
 skip = total_frames//(int(config["animlength"])*int(config['animfps']))
+#TODO FInd center when there is no umbra shadow
 center_lonlat = data_umbra[int(data_umbra.shape[0]/2),0,:2]
 
 data_umbra = data_umbra[::skip,:,:]
@@ -117,33 +119,11 @@ def update(frame):
 
 print("[info] Rendering animation as MP4...")
 ani = FuncAnimation(fig, update, frames=data_umbra.shape[0], blit=True, repeat=False)
-ani.save(f"{eclipses[eclipse]}_anim.mp4", writer="ffmpeg", dpi=100, fps=int(config['animfps']))
-print(f"[info] Animation saved as \033[34m{eclipses[eclipse]}_anim.mp4\033[0m")
+os.makedirs("results", exist_ok=True)
+animation_path = os.path.join("results", f"{eclipses[eclipse]}_anim.mp4")
+ani.save(animation_path, writer="ffmpeg", dpi=100, fps=int(config['animfps']))
+print(f"[info] Animation saved in \033[34m{animation_path}\033[0m")
 plt.close(fig)
-
-
-
-
-
-
-#Sandbox
-testframe = -10
-testdata_penumbra_clean = clean(data_penumbra[testframe,:,:2])
-testdata_penumbra_clean_hull = clean_hull2(testdata_penumbra_clean)
-
-fig = plt.figure(figsize=(5,5))
-fig.patch.set_facecolor('black')
-ax = plt.axes(projection=ccrs.Orthographic(center_lonlat[0],center_lonlat[1]))
-ax.set_facecolor('black')
-ax.set_global()
-ax.coastlines()
-ax.add_feature(cfeature.LAND, facecolor='green')
-ax.add_feature(cfeature.OCEAN, facecolor='lightblue')
-ax.scatter(testdata_penumbra_clean_hull[:,0],testdata_penumbra_clean_hull[:,1],s=2.5,marker='x', color='black',transform=ccrs.PlateCarree())
-orthodromepoints = fill_orthodrome(testdata_penumbra_clean_hull)
-ax.scatter(orthodromepoints[:,0],orthodromepoints[:,1],color="red",s=5,marker='o',transform=ccrs.PlateCarree())
-#plt.show()
-
 
 
 

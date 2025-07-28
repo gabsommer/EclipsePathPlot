@@ -10,6 +10,9 @@ anim/.venv/
 #Ignore sandbox
 sandbox/
 
+#Ignore results folder
+results/
+
 
 #Ignore media and data files
 *.dat
